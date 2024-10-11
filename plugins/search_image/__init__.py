@@ -7,7 +7,7 @@ __plugin_meta__ = PluginMetadata(
     usage="""
     识别图片 [二次元图片]
     指令：
-        识图 [图片] 
+        识图 [图片]
     """.strip(),
     extra=PluginExtraData(
         author="HibiKier",
