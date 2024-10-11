@@ -74,7 +74,9 @@ def process_plugins(commit_hash: str, plugins: dict, changed_files: list):
         else:
             file_path = f"{module_path}.py"
             if file_path in changed_files:
-                new_version = f"{current_version}-{commit_hash}"
+                new_version = update_version_in_init(
+                    file_path, current_version, commit_hash
+                )
                 plugin_info["version"] = new_version
         if plugin_info["version"] != current_version:
             save_plugins_json(plugins)
