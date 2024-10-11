@@ -60,7 +60,9 @@ jobs:
 
       - name: Push changes
         if: steps.check_branch.outputs.branch_exists == 'true'
-        run: git push
+        run: |
+          git checkout -b ${{ env.default_branch }}
+          git push origin ${{ env.default_branch }}
 
       - name: Get base branch
         if: steps.check_branch.outputs.branch_exists == 'false'
