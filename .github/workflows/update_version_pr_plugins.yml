@@ -1,4 +1,4 @@
-name: Update Version
+name: Update Plugin Version
 
 on:
   push:
@@ -15,6 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Set up Git
@@ -44,10 +45,10 @@ jobs:
         run: |
           python3 update_version.py
           if [[ ${{ steps.check_branch.outputs.branch_exists }} == "true" ]]; then
-            git rebase origin/create-pr/update_version_plugins || (echo "need_resolve=true" >> $GITHUB_OUTPUT && exit 0)
+            git rebase origin/create-pr/update_version_plugins || echo "need_resolve=true" >> $GITHUB_OUTPUT
+          else
+            echo "need_resolve=false" >> $GITHUB_OUTPUT
           fi
-          echo "need_resolve=false" >> $GITHUB_OUTPUT
-
       - name: Resolve conflicts using ours
         if: steps.run_script.outputs.need_resolve == 'true'
         run: |
@@ -55,10 +56,19 @@ jobs:
           git diff --name-only --diff-filter=U | xargs git add .
           git rebase --continue || echo "Nothing to rebase"
 
+
+      - name: Get base branch
+        id: vars
+        run: |
+          base_ref=${{ github.head_ref || github.ref }}
+          echo ::set-output name=base_branch::${base_ref#refs/*/}
+
       - name: Create or update PR
         uses: peter-evans/create-pull-request@v7
+        continue-on-error: true
         with:
           token: ${{ secrets.GH_TOKEN }}
+          base: ${{ steps.vars.outputs.base_branch }}
           branch: create-pr/update_version_plugins
           title: ':tada: chore(version): 自动更新插件版本'
           body: 'This PR updates the version file.'
