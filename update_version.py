@@ -1,7 +1,19 @@
-import subprocess
 import json
-import re
 import os
+import re
+import subprocess
+
+
+def commit_update_changes(plugin_name, new_version):
+    subprocess.run(["git", "add", "."])
+    subprocess.run(
+        [
+            "git",
+            "commit",
+            "-m",
+            f":tada: chore({plugin_name}): Update version to {new_version}",
+        ]
+    )
 
 
 def get_changed_files():
@@ -65,6 +77,8 @@ def process_plugins(plugins, changed_files):
             if file_path in changed_files:
                 new_version = f"{current_version}-{commit_hash}"
                 plugin_info["version"] = new_version
+        if plugin_info["version"] != current_version:
+            commit_update_changes(plugin_name, plugin_info["version"])
 
 
 def main():
