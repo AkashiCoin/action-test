@@ -28,14 +28,28 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Run script
+
+      - name: Check if remote branch exists
+        id: check_branch
         run: |
           git fetch origin
+          if git show-ref --verify --quiet refs/remotes/origin/create-pr/update_version_plugins; then
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run script
+        id: run_script
+        run: |
           python3 update_version.py
-          git rebase origin/create-pr/update_version_plugins || echo "Rebase failed"
+          if [[ ${{ steps.check_branch.outputs.branch_exists }} == "true" ]]; then
+            git rebase origin/create-pr/update_version_plugins || (echo "need_resolve=true" >> $GITHUB_OUTPUT && exit 0)
+          fi
+          echo "need_resolve=false" >> $GITHUB_OUTPUT
 
       - name: Resolve conflicts using ours
-        if: failure()
+        if: steps.run_script.outputs.need_resolve == 'true'
         run: |
           git diff --name-only --diff-filter=U | xargs git checkout --ours
           git diff --name-only --diff-filter=U | xargs git add .

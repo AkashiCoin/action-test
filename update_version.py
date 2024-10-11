@@ -3,6 +3,8 @@ import os
 import re
 import subprocess
 
+plugins_json_path = "plugins.json"
+
 
 def commit_update_changes(plugin_name, new_version):
     subprocess.run(["git", "add", "."])
@@ -78,19 +80,21 @@ def process_plugins(plugins, changed_files):
                 new_version = f"{current_version}-{commit_hash}"
                 plugin_info["version"] = new_version
         if plugin_info["version"] != current_version:
+            save_plugins_json(plugins)
             commit_update_changes(plugin_name, plugin_info["version"])
 
 
+def save_plugins_json(plugins: dict):
+    with open(plugins_json_path, "w", encoding="utf-8") as file:
+        json.dump(plugins, file, indent=4, ensure_ascii=False)
+
+
 def main():
-    plugins_json_path = "plugins.json"
     with open(plugins_json_path, "r", encoding="utf-8") as file:
         plugins = json.load(file)
 
     changed_files = get_changed_files()
     process_plugins(plugins, changed_files)
-
-    with open(plugins_json_path, "w", encoding="utf-8") as file:
-        json.dump(plugins, file, indent=4, ensure_ascii=False)
 
 
 if __name__ == "__main__":
