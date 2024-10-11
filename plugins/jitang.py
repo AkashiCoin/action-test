@@ -7,7 +7,7 @@ __plugin_meta__ = PluginMetadata(
     usage="""
     不喝点什么感觉有点不舒服
     指令：
-        鸡汤
+        鸡汤 
     """.strip(),
     extra=PluginExtraData(
         author="HibiKier",
