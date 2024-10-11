@@ -1,0 +1,22 @@
+{
+    "鸡汤": {
+        "module": "jitang",
+        "module_path": "plugins.jitang",
+        "description": "喏，亲手为你煮的鸡汤",
+        "usage": "不喝点什么感觉有点不舒服\n    指令：\n        鸡汤",
+        "author": "HibiKier",
+        "version": "0.1-36e70ae",
+        "plugin_type": "NORMAL",
+        "is_dir": false
+    },
+    "识图": {
+        "module": "search_image",
+        "module_path": "plugins.search_image",
+        "description": "以图搜图，看破本源",
+        "usage": "识别图片 [二次元图片]\n    指令：\n        识图 [图片]",
+        "author": "HibiKier",
+        "version": "0.1",
+        "plugin_type": "NORMAL",
+        "is_dir": true
+    }
+}
