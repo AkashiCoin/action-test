@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import re
@@ -18,11 +19,11 @@ def commit_update_changes(plugin_name, new_version):
     )
 
 
-def get_changed_files():
+def get_changed_files(commit_hash: str = "HEAD"):
     # 获取当前分支与主分支的差异文件列表
     changed_files = (
         subprocess.check_output(
-            ["git", "diff-tree", "--name-only", "--no-commit-id", "-r", "HEAD"]
+            ["git", "diff-tree", "--name-only", "--no-commit-id", "-r", commit_hash]
         )
         .decode()
         .split()
@@ -52,12 +53,8 @@ def update_version_in_init(file_path, current_version, commit_hash):
     return current_version
 
 
-def process_plugins(plugins, changed_files):
-    commit_hash = (
-        subprocess.check_output(["git", "rev-parse", "--short=7", "HEAD"])
-        .decode()
-        .strip()
-    )
+def process_plugins(commit_hash: str, plugins: dict, changed_files: list):
+    commit_hash = commit_hash[:7]
 
     for plugin_name, plugin_info in plugins.items():
         module_path = plugin_info["module_path"].replace(".", "/")
@@ -90,11 +87,22 @@ def save_plugins_json(plugins: dict):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.description = "Update version in plugins.json"
+    parser.add_argument(
+        "-c",
+        "--commit_hash",
+        help="The commit hash to get the changed files from. Defaults to HEAD.",
+        dest="commit_hash",
+        type=str,
+        default="HEAD",
+    )
+    args = parser.parse_args()
     with open(plugins_json_path, "r", encoding="utf-8") as file:
         plugins = json.load(file)
 
-    changed_files = get_changed_files()
-    process_plugins(plugins, changed_files)
+    changed_files = get_changed_files(args.commit_hash)
+    process_plugins(args.commit_hash, plugins, changed_files)
 
 
 if __name__ == "__main__":

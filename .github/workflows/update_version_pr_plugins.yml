@@ -14,29 +14,28 @@ jobs:
     env:
       default_branch: create-pr/update_version_plugins
     steps:
+      - name: Set up Git
+        run: |
+          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+          git config --global user.name "${{ github.actor }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      - name: Set up Git
-        run: |
-          git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-          git config --global user.name "${{ github.actor }}"
-
-
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
 
       - name: Check if remote branch exists
         id: check_branch
         run: |
           git fetch origin
           if git show-ref --verify --quiet refs/remotes/origin/${{ env.default_branch }}; then
+            git checkout ${{ env.default_branch }}
             echo "branch_exists=true" >> $GITHUB_OUTPUT
           else
             echo "branch_exists=false" >> $GITHUB_OUTPUT
@@ -45,12 +44,13 @@ jobs:
       - name: Run script
         id: run_script
         run: |
-          python3 update_version.py
+          python3 update_version.py -c ${{ github.sha }}
           if [[ ${{ steps.check_branch.outputs.branch_exists }} == "true" ]]; then
             git rebase origin/${{ env.default_branch }} || echo "need_resolve=true" >> $GITHUB_OUTPUT
           else
             echo "need_resolve=false" >> $GITHUB_OUTPUT
           fi
+
       - name: Resolve conflicts using ours
         if: steps.run_script.outputs.need_resolve == 'true'
         run: |
@@ -60,7 +60,8 @@ jobs:
 
       - name: Push changes
         if: steps.check_branch.outputs.branch_exists == 'true'
-        run: git push
+        run: |
+          git push origin ${{ env.default_branch }}
 
       - name: Get base branch
         if: steps.check_branch.outputs.branch_exists == 'false'
