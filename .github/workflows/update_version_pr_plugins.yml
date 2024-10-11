@@ -11,6 +11,8 @@ on:
 jobs:
   update-version:
     runs-on: ubuntu-latest
+    env:
+      default_branch: create-pr/update_version_plugins
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,7 +36,7 @@ jobs:
         id: check_branch
         run: |
           git fetch origin
-          if git show-ref --verify --quiet refs/remotes/origin/create-pr/update_version_plugins; then
+          if git show-ref --verify --quiet refs/remotes/origin/${{ env.default_branch }}; then
             echo "branch_exists=true" >> $GITHUB_OUTPUT
           else
             echo "branch_exists=false" >> $GITHUB_OUTPUT
@@ -45,7 +47,7 @@ jobs:
         run: |
           python3 update_version.py
           if [[ ${{ steps.check_branch.outputs.branch_exists }} == "true" ]]; then
-            git rebase origin/create-pr/update_version_plugins || echo "need_resolve=true" >> $GITHUB_OUTPUT
+            git rebase origin/${{ env.default_branch }} || echo "need_resolve=true" >> $GITHUB_OUTPUT
           else
             echo "need_resolve=false" >> $GITHUB_OUTPUT
           fi
@@ -56,8 +58,12 @@ jobs:
           git diff --name-only --diff-filter=U | xargs git add .
           git rebase --continue || echo "Nothing to rebase"
 
+      - name: Push changes
+        if: steps.check_branch.outputs.branch_exists == 'true'
+        run: git push
 
       - name: Get base branch
+        if: steps.check_branch.outputs.branch_exists == 'false'
         id: vars
         run: |
           base_ref=${{ github.head_ref || github.ref }}
@@ -65,11 +71,12 @@ jobs:
 
       - name: Create or update PR
         uses: peter-evans/create-pull-request@v7
+        if: steps.check_branch.outputs.branch_exists == 'false'
         continue-on-error: true
         with:
           token: ${{ secrets.GH_TOKEN }}
           base: ${{ steps.vars.outputs.base_branch }}
-          branch: create-pr/update_version_plugins
+          branch: ${{ env.default_branch }}
           title: ':tada: chore(version): 自动更新插件版本'
           body: 'This PR updates the version file.'
           commit-message: ':tada: chore(version): Update version'
