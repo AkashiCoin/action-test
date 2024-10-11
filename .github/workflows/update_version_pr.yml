@@ -65,7 +65,7 @@ jobs:
         with:
           token: ${{ secrets.GH_TOKEN }}
           branch: create-pr/update_version
-          title: ':tada: chore(version): Automated Update Version'
+          title: ':tada: chore(version): 自动更新版本'
           body: 'This PR updates the version file.'
           commit-message: ':tada: chore(version): Update version to ${{ steps.update_version.outputs.new_version }}'
           add-paths: __version__
